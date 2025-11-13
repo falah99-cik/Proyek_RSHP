@@ -10,26 +10,80 @@ use App\Models\RekamMedis;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ResepsionisController extends Controller
 {
     public function dashboard()
     {
-        // Statistik hari ini
-        $totalAntrian = TemuDokter::whereDate('tanggal_temu', today())->count();
-        $antrianSelesai = TemuDokter::whereDate('tanggal_temu', today())->where('status', 1)->count();
-        $antrianMenunggu = TemuDokter::whereDate('tanggal_temu', today())->where('status', 0)->count();
+        $today = today();
 
-        // Antrian hari ini
-        $antrianHariIni = TemuDokter::whereDate('tanggal_temu', today())
-            ->with(['pet', 'pemilik', 'dokter'])
-            ->orderBy('no_urut')
+        $totalReservasiHariIni = TemuDokter::whereDate('waktu_daftar', $today)->count();
+
+        $totalPemilik = Pemilik::count();
+        $totalPet = Pet::count();
+
+        $reservasiHariIni = TemuDokter::whereDate('waktu_daftar', $today)
+            ->join('pet as p', 'temu_dokter.idpet', '=', 'p.idpet')
+            ->join('pemilik as pm', 'p.idpemilik', '=', 'pm.idpemilik')
+            ->join('user as u', 'pm.iduser', '=', 'u.iduser')
+            ->leftJoin('role_user as ru', 'temu_dokter.idrole_user', '=', 'ru.idrole_user')
+            ->leftJoin('user as d', 'ru.iduser', '=', 'd.iduser')
+            ->select(
+                'temu_dokter.no_urut',
+                'temu_dokter.waktu_daftar',
+                'p.nama as nama_pet',
+                'u.nama as nama_pemilik',
+                'd.nama as nama_dokter',
+                'temu_dokter.status'
+            )
+            ->orderBy('temu_dokter.no_urut')
             ->get();
 
-        // Pasien terdaftar baru
-        $pasienBaru = Pet::whereDate('created_at', today())->count();
+        $listPasienBaru = TemuDokter::whereDate('waktu_daftar', $today)
+            ->join('pet as p', 'temu_dokter.idpet', '=', 'p.idpet')
+            ->join('pemilik as pm', 'p.idpemilik', '=', 'pm.idpemilik')
+            ->join('user as u', 'pm.iduser', '=', 'u.iduser')
+            ->select('p.nama as nama_pet', 'u.nama as nama_pemilik')
+            ->distinct()
+            ->get();
 
-        return view('resepsionis.dashboard', compact('totalAntrian', 'antrianSelesai', 'antrianMenunggu', 'antrianHariIni', 'pasienBaru'));
+        $pasienBaru = $listPasienBaru->count();
+
+        $listPemilikBaru = TemuDokter::whereDate('waktu_daftar', $today)
+            ->join('pet as p', 'temu_dokter.idpet', '=', 'p.idpet')
+            ->join('pemilik as pm', 'p.idpemilik', '=', 'pm.idpemilik')
+            ->join('user as u', 'pm.iduser', '=', 'u.iduser')
+            ->select('u.nama')
+            ->distinct()
+            ->get();
+
+        $pemilikBaru = $listPemilikBaru->count();
+
+        $reservasiSelesai = TemuDokter::whereDate('waktu_daftar', $today)
+            ->where('status', 1)
+            ->count();
+
+        $grafik7Hari = TemuDokter::select(
+            DB::raw('DATE(waktu_daftar) as tanggal'),
+            DB::raw('COUNT(*) as total')
+        )
+            ->where('waktu_daftar', '>=', now()->subDays(6))
+            ->groupBy('tanggal')
+            ->orderBy('tanggal')
+            ->get();
+
+        return view('resepsionis.dashboard', compact(
+            'totalReservasiHariIni',
+            'totalPemilik',
+            'totalPet',
+            'reservasiHariIni',
+            'pasienBaru',
+            'pemilikBaru',
+            'listPasienBaru',
+            'reservasiSelesai',
+            'grafik7Hari'
+        ));
     }
 
     public function registrasiPemilik()
@@ -65,8 +119,8 @@ class ResepsionisController extends Controller
     public function storeTemuDokter(Request $request)
     {
         $request->validate([
-            'pet_id' => 'required|exists:pets,id',
-            'dokter_id' => 'required|exists:users,id',
+            'pet_id' => 'required|exists:pet,idpet',
+            'dokter_id' => 'required|exists:role_user,idrole_user',
         ]);
 
         $tanggal = Carbon::now()->format('Y-m-d');

@@ -49,26 +49,16 @@ Route::middleware(['auth', 'role:Dokter'])->prefix('dokter')->name('dokter.')->g
     Route::delete('/detail-rekam-medis/{id}', [DokterController::class, 'destroyDetailRekamMedis'])->name('destroy-detail-rekam-medis');
 });
 
-// Perawat Routes
 Route::prefix('perawat')->middleware(['auth', 'role:Perawat'])->group(function () {
-    Route::get(
-        '/dashboard',
-        [App\Http\Controllers\PerawatController::class, 'dashboard']
-    )->name('perawat.dashboard');
-    Route::get(
-        '/rekam-medis',
-        [App\Http\Controllers\PerawatController::class, 'rekamMedis']
-    )->name('perawat.rekam-medis');
-    Route::get(
-        '/rekam-medis/detail/{id}',
-        [App\Http\Controllers\PerawatController::class, 'detailRekamMedis']
-    )->name('perawat.rekam-medis.detail');
-    Route::get(
-        '/perawat/rekam-medis/tambah/{id}',
-        [PerawatController::class, 'tambahRekamMedis']
-    )->name('perawat.rekam-medis.tambah');
+    Route::get('/dashboard', [PerawatController::class, 'dashboard'])
+        ->name('perawat.dashboard');
+    Route::get('/rekam-medis', [PerawatController::class, 'rekamMedis'])
+        ->name('perawat.rekam-medis');
+    Route::get('/rekam-medis/detail/{id}', [PerawatController::class, 'detailRekamMedis'])
+        ->name('perawat.rekam-medis.detail');
+    Route::get('/rekam-medis/tambah/{id}', [PerawatController::class, 'tambahRekamMedis'])
+        ->name('perawat.rekam-medis.tambah');
 });
-
 
 // Resepsionis Routes
 Route::middleware(['auth', 'role:Resepsionis'])->prefix('resepsionis')->name('resepsionis.')->group(function () {
