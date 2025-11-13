@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Role extends Model
 {
@@ -15,13 +15,8 @@ class Role extends Model
 
     protected $fillable = ['nama_role'];
 
-    public function users()
+    public function roleUsers()
     {
-        return $this->belongsToMany(User::class, 'role_user', 'idrole', 'iduser')->withPivot('status');
-    }
-
-    public static function get_opsi_role()
-    {
-        return self::orderBy('nama_role', 'asc')->get();
+        return $this->hasMany(RoleUser::class, 'idrole', 'idrole');
     }
 }

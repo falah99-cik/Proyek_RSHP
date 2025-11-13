@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class DetailRekamMedis extends Model
 {
@@ -11,20 +11,18 @@ class DetailRekamMedis extends Model
 
     protected $table = 'detail_rekam_medis';
     protected $primaryKey = 'iddetail_rekam_medis';
-    protected $fillable = [
-        'idrekam_medis',
-        'idkode_tindakan_terapi',
-        'detail',
-    ];
+
     public $timestamps = false;
+
+    protected $fillable = ['idrekam_medis', 'idkode_tindakan_terapi', 'detail'];
 
     public function rekamMedis()
     {
-        return $this->belongsTo(RekamMedis::class, 'idrekam_medis');
+        return $this->belongsTo(RekamMedis::class, 'idrekam_medis', 'idrekam_medis');
     }
 
-    public function kodeTindakanTerapi()
+    public function tindakan()
     {
-        return $this->belongsTo(KodeTindakanTerapi::class, 'idkode_tindakan_terapi');
+        return $this->belongsTo(Tindakan::class, 'idkode_tindakan_terapi', 'idkode_tindakan_terapi');
     }
 }

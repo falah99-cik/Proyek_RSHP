@@ -6,51 +6,61 @@ use App\Models\Pet;
 use App\Models\RekamMedis;
 use App\Models\TemuDokter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PemilikController extends Controller
 {
     public function dashboard()
     {
-        $pemilikId = auth()->user()->pemilik->idpemilik ?? null;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $pemilik = $user->pemilik;
 
-        if (!$pemilikId) {
+        if (!$pemilik) {
             return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
         }
 
-        // Statistik hewan peliharaan
-        $totalHewan = Pet::where('idpemilik', $pemilikId)->count();
-        $totalRekamMedis = RekamMedis::whereHas('pet', function ($query) use ($pemilikId) {
-            $query->where('idpemilik', $pemilikId);
-        })->count();
+        $pemilikId = $pemilik->idpemilik;
 
-        // Reservasi aktif
-        $reservasiAktif = TemuDokter::whereHas('pet', function ($query) use ($pemilikId) {
-            $query->where('idpemilik', $pemilikId);
-        })->where('status', 0)
-            ->with(['pet', 'dokter'])
-            ->orderBy('tanggal_temu')
+        $totalHewan = $pemilik->pets()->count();
+
+        $totalRekamMedis = RekamMedis::whereHas(
+            'pet',
+            fn($q) =>
+            $q->where('idpemilik', $pemilikId)
+        )->count();
+
+
+        $reservasiAktif = TemuDokter::with(['pet', 'dokter.user'])
+            ->whereHas('pet', fn($q) => $q->where('idpemilik', $pemilikId))
+            ->orderBy('waktu_daftar', 'desc')
+            ->limit(5)
             ->get();
 
-        // Hewan terakhir
-        $hewanTerakhir = Pet::where('idpemilik', $pemilikId)
-            ->orderBy('created_at', 'desc')
+        $hewanTerakhir = $pemilik->pets()
+            ->orderBy('idpet', 'desc')
             ->first();
 
-        return view('pemilik.dashboard', compact('totalHewan', 'totalRekamMedis', 'reservasiAktif', 'hewanTerakhir'));
+        $pets = $pemilik->pets()->orderBy('idpet', 'desc')->get();
+
+        return view('pemilik.dashboard', compact(
+            'totalHewan',
+            'totalRekamMedis',
+            'reservasiAktif',
+            'hewanTerakhir',
+            'pets'
+        ));
     }
 
     public function daftarPet()
     {
-        $pemilikId = auth()->user()->pemilik->idpemilik ?? null;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $pemilik = $user->pemilik;
 
-        if (!$pemilikId) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        $pets = Pet::where('idpemilik', $pemilikId)
+        $pets = $pemilik->pets()
             ->with(['rasHewan', 'jenisHewan'])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('idpet', 'desc')
             ->get();
 
         return view('pemilik.daftar_pet', compact('pets'));
@@ -58,16 +68,11 @@ class PemilikController extends Controller
 
     public function daftarRekamMedis()
     {
-        $pemilikId = auth()->user()->pemilik->idpemilik ?? null;
+        $pemilikId = Auth::user()->pemilik->idpemilik;
 
-        if (!$pemilikId) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        $rekamMedisList = RekamMedis::whereHas('pet', function ($query) use ($pemilikId) {
-            $query->where('idpemilik', $pemilikId);
-        })->with(['pet', 'dokter'])
-            ->orderBy('created_at', 'desc')
+        $rekamMedisList = RekamMedis::with(['pet', 'dokter.user'])
+            ->whereHas('pet', fn($q) => $q->where('idpemilik', $pemilikId))
+            ->orderBy('idrekam_medis', 'desc')
             ->get();
 
         return view('pemilik.daftar_rekam_medis', compact('rekamMedisList'));
@@ -75,16 +80,11 @@ class PemilikController extends Controller
 
     public function daftarReservasi()
     {
-        $pemilikId = auth()->user()->pemilik->idpemilik ?? null;
+        $pemilikId = Auth::user()->pemilik->idpemilik;
 
-        if (!$pemilikId) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        $reservasiList = TemuDokter::whereHas('pet', function ($query) use ($pemilikId) {
-            $query->where('idpemilik', $pemilikId);
-        })->with(['pet', 'dokter'])
-            ->orderBy('created_at', 'desc')
+        $reservasiList = TemuDokter::with(['pet', 'dokter.user'])
+            ->whereHas('pet', fn($q) => $q->where('idpemilik', $pemilikId))
+            ->orderBy('waktu_daftar', 'desc')
             ->get();
 
         return view('pemilik.daftar_reservasi', compact('reservasiList'));
@@ -92,68 +92,58 @@ class PemilikController extends Controller
 
     public function profil()
     {
-        $user = auth()->user();
-        $pemilik = $user->pemilik;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        if (!$pemilik) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        return view('pemilik.profil_pemilik', compact('user', 'pemilik'));
+        return view('pemilik.profil_pemilik', [
+            'user'    => $user,
+            'pemilik' => $user->pemilik
+        ]);
     }
 
     public function editProfil()
     {
-        $user = auth()->user();
-        $pemilik = $user->pemilik;
+        $user = Auth::user();
 
-        if (!$pemilik) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        return view('pemilik.edit_profil', compact('user', 'pemilik'));
+        return view('pemilik.edit_profil', [
+            'user'    => $user,
+            'pemilik' => $user->pemilik
+        ]);
     }
 
     public function updateProfil(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $pemilik = $user->pemilik;
+
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:user,email,' . auth()->user()->iduser . ',iduser',
-            'no_wa' => 'required|string|max:20',
+            'nama'   => 'required|string|max:255',
+            'email'  => 'required|email|max:255|unique:user,email,' . $user->iduser . ',iduser',
+            'no_wa'  => 'required|string|max:20',
             'alamat' => 'required|string|max:255',
         ]);
 
-        $user = auth()->user();
-        $pemilik = $user->pemilik;
+        $user->update([
+            'nama'  => $request->nama,
+            'email' => $request->email,
+        ]);
 
-        if (!$pemilik) {
-            return redirect()->route('login')->with('error', 'Data pemilik tidak ditemukan.');
-        }
-
-        DB::transaction(function () use ($request, $user, $pemilik) {
-            $user->update([
-                'nama' => $request->nama,
-                'email' => $request->email,
-            ]);
-
-            $pemilik->update([
-                'no_wa' => $request->no_wa,
-                'alamat' => $request->alamat,
-            ]);
-        });
+        $pemilik->update([
+            'no_wa'  => $request->no_wa,
+            'alamat' => $request->alamat,
+        ]);
 
         return redirect()->route('pemilik.profil')->with('success', 'Profil berhasil diperbarui.');
     }
 
     public function detailRekamMedis($id)
     {
-        $rekamMedis = RekamMedis::with(['pet', 'dokter', 'detailRekamMedis'])
-            ->findOrFail($id);
+        $pemilikId = Auth::user()->pemilik->idpemilik;
 
-        // Pastikan rekam medis milik pemilik yang login
-        if ($rekamMedis->pet->idpemilik != auth()->user()->pemilik->idpemilik) {
-            return redirect()->route('pemilik.rekam-medis')->with('error', 'Akses ditolak.');
-        }
+        $rekamMedis = RekamMedis::with(['pet', 'dokter.user', 'detailRekamMedis.tindakan'])
+            ->whereHas('pet', fn($q) => $q->where('idpemilik', $pemilikId))
+            ->findOrFail($id);
 
         return view('pemilik.detail_rekam_medis', compact('rekamMedis'));
     }

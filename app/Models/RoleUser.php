@@ -5,23 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Pemilik extends Model
+class RoleUser extends Model
 {
     use HasFactory;
 
-    protected $table = 'pemilik';
-    protected $primaryKey = 'idpemilik';
+    protected $table = 'role_user';
+    protected $primaryKey = 'idrole_user';
     public $timestamps = false;
 
-    protected $fillable = ['iduser', 'no_wa', 'alamat'];
+    protected $fillable = ['iduser', 'idrole', 'status'];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'iduser', 'iduser');
     }
 
-    public function pets()
+    public function role()
     {
-        return $this->hasMany(Pet::class, 'idpemilik', 'idpemilik');
+        return $this->belongsTo(Role::class, 'idrole', 'idrole');
     }
 }

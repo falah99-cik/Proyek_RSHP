@@ -23,7 +23,7 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-info">
                         <div class="inner">
-                            <h3>{{ $totalPets }}</h3>
+                            <h3>{{ $totalHewan }}</h3>
                             <p>Hewan Peliharaan</p>
                         </div>
                         <div class="icon">
@@ -51,7 +51,7 @@
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-warning">
                         <div class="inner">
-                            <h3>{{ $totalReservasi }}</h3>
+                            <h3>{{ $reservasiAktif->count() }}</h3>
                             <p>Reservasi</p>
                         </div>
                         <div class="icon">
@@ -112,7 +112,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($reservasiTerbaru as $reservasi)
+                                    @forelse($reservasiAktif as $reservasi)
                                     <tr>
                                         <td>{{ $reservasi->waktu_daftar }}</td>
                                         <td>{{ $reservasi->pet->nama }}</td>
