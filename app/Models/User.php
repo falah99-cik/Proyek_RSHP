@@ -37,9 +37,15 @@ class User extends Authenticatable
         ];
     }
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'idrole', 'idrole');
+    }
+
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'role_user', 'iduser', 'idrole')->withPivot('status');
+        return $this->belongsToMany(Role::class, 'role_user', 'iduser', 'idrole')
+            ->withPivot('status');
     }
 
     public static function findUserByEmail($email)

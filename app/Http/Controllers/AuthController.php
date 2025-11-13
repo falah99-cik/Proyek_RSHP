@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -17,7 +16,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
 
@@ -26,9 +25,12 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Redirect berdasarkan role
-            $user = Auth::user();
-            $role = $user->role;
+            // Ambil user dengan relasi agar intelephense paham tipenya
+            // Load relasi
+            $user = User::with(['roles'])->find(Auth::id());
+
+            // Ambil role dari pivot (bukan dari kolom idrole)
+            $role = $user->roles->first();
 
             if ($role) {
                 switch ($role->nama_role) {
@@ -43,11 +45,12 @@ class AuthController extends Controller
                     case 'Pemilik':
                         return redirect()->route('pemilik.dashboard');
                     default:
-                        return redirect()->route('admin.dashboard');
+                        return redirect()->route('home');
                 }
             }
 
-            return redirect()->route('admin.dashboard');
+            // fallback
+            return redirect()->route('home');
         }
 
         return back()->withErrors([
@@ -58,9 +61,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

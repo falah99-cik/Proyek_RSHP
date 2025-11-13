@@ -17,13 +17,9 @@ class RoleMiddleware
         }
 
         $user = Auth::user();
-        $userRoles = $user->roles->pluck('nama_role')->toArray();
 
-        Log::info("Checking user roles", [
-            'user_id' => $user->iduser,
-            'user_roles' => $userRoles,
-            'required_roles' => $roles,
-        ]);
+        // Jika relasi roles gagal, jadikan array kosong
+        $userRoles = $user->roles ? $user->roles->pluck('nama_role')->toArray() : [];
 
         if (empty($roles)) {
             return $next($request);
