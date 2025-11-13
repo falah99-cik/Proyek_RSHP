@@ -15,27 +15,41 @@ class PerawatController extends Controller
 {
     public function dashboard()
     {
-        $perawatId = Auth::user()->iduser;
-
-        // Statistik rekam medis yang ditangani perawat ini
-        $totalRekamMedis = DetailRekamMedis::where('idperawat', $perawatId)->count();
-        $rekamMedisHariIni = DetailRekamMedis::where('idperawat', $perawatId)
-            ->whereDate('created_at', today())
-            ->count();
-
-        // Rekam medis yang perlu ditangani (status tertentu)
-        $rekamMedisAktif = RekamMedis::where('status', 'perawatan')
-            ->with(['pet', 'pemilik'])
-            ->orderBy('created_at', 'desc')
+        $totalPasien = Pet::count();
+        $totalRekamMedis = RekamMedis::count();
+        $pasienTerbaru = DB::table('rekam_medis AS rm')
+            ->join('pet AS p', 'rm.idpet', '=', 'p.idpet')
+            ->join('pemilik AS pm', 'p.idpemilik', '=', 'pm.idpemilik')
+            ->join('user AS u', 'pm.iduser', '=', 'u.iduser')
+            ->select(
+                'p.idpet',
+                'p.nama AS nama_pet',
+                'u.nama AS nama_pemilik',
+                DB::raw('MAX(rm.created_at) AS last_updated')
+            )
+            ->groupBy('p.idpet', 'p.nama', 'u.nama')
+            ->orderBy('last_updated', 'DESC')
             ->limit(10)
             ->get();
 
-        return view('perawat.dashboard', compact('totalRekamMedis', 'rekamMedisHariIni', 'rekamMedisAktif'));
+        return view('perawat.dashboard', compact(
+            'totalPasien',
+            'totalRekamMedis',
+            'pasienTerbaru'
+        ));
+    }
+
+    public function tambahRekamMedis($id)
+    {
+        // ambil pet + data pemilik (via user)
+        $pet = Pet::with(['pemilik.user'])->findOrFail($id);
+
+        return view('perawat.tambah_rekam_medis', compact('pet'));
     }
 
     public function rekamMedis()
     {
-        $rekamMedisList = RekamMedis::with(['pet', 'pemilik', 'dokter'])
+        $rekamMedisList = RekamMedis::with(['pet.pemilik.user', 'dokter'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -44,7 +58,7 @@ class PerawatController extends Controller
 
     public function detailRekamMedis($id)
     {
-        $rekamMedis = RekamMedis::with(['pet', 'pemilik', 'dokter', 'detailRekamMedis'])
+        $rekamMedis = RekamMedis::with(['pet.pemilik.user', 'dokter', 'detailRekamMedis'])
             ->findOrFail($id);
 
         return view('perawat.detail_rekam_medis', compact('rekamMedis'));
@@ -52,18 +66,15 @@ class PerawatController extends Controller
 
     public function storeDetailRekamMedis(Request $request)
     {
-        // Validasi input
         $request->validate([
             'idrekam_medis' => 'required|exists:rekam_medis,idrekam_medis',
             'idkode_tindakan_terapi' => 'required|exists:kode_tindakan_terapi,idkode_tindakan_terapi',
             'detail' => 'nullable|string',
-            'pet_id' => 'required|exists:pet,idpet',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Buat detail rekam medis baru
             DetailRekamMedis::create([
                 'idrekam_medis' => $request->idrekam_medis,
                 'idkode_tindakan_terapi' => $request->idkode_tindakan_terapi,
@@ -75,25 +86,17 @@ class PerawatController extends Controller
             return redirect()->back()->with('success', 'Tindakan/terapi berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal menambahkan tindakan/terapi: ' . $e->getMessage())->withInput();
+
+            return redirect()->back()->with('error', 'Gagal menambahkan tindakan/terapi: ' . $e->getMessage());
         }
     }
 
     public function destroyDetailRekamMedis($id)
     {
-        // Validasi input dari GET request
-        $iddetail_rekam_medis = request()->get('iddetail_rekam_medis', $id);
-        $pet_id = request()->get('pet_id');
-
-        if (empty($iddetail_rekam_medis) || empty($pet_id)) {
-            return redirect()->back()->with('error', 'ID data tidak valid.');
-        }
-
         try {
             DB::beginTransaction();
 
-            // Cari dan hapus detail rekam medis
-            $detail = DetailRekamMedis::findOrFail($iddetail_rekam_medis);
+            $detail = DetailRekamMedis::findOrFail($id);
             $detail->delete();
 
             DB::commit();
@@ -101,6 +104,7 @@ class PerawatController extends Controller
             return redirect()->back()->with('success', 'Tindakan/terapi berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()->with('error', 'Gagal menghapus tindakan/terapi: ' . $e->getMessage());
         }
     }
@@ -112,26 +116,24 @@ class PerawatController extends Controller
             'anamnesa' => 'required|string',
             'temuan_klinis' => 'required|string',
             'diagnosa' => 'required|string',
-            'iduser_dokter' => 'required|exists:users,iduser',
+            'iduser_dokter' => 'required|exists:user,iduser',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Get the role_user ID for the selected doctor (idrole = 2 for Dokter)
+            // cek bahwa user tsb memang dokter (role id = 2)
             $dokterRole = DB::table('role_user')
                 ->where('iduser', $request->iduser_dokter)
-                ->where('idrole', 2) // 2 is the role ID for Dokter
+                ->where('idrole', 2)
                 ->first();
 
             if (!$dokterRole) {
-                DB::rollBack();
                 return redirect()->back()
                     ->with('error', 'Dokter pemeriksa tidak valid.')
                     ->withInput();
             }
 
-            // Create the main medical record
             RekamMedis::create([
                 'idpet' => $request->pet_id,
                 'anamnesa' => $request->anamnesa,
@@ -142,7 +144,7 @@ class PerawatController extends Controller
 
             DB::commit();
 
-            return redirect()->route('perawat.rekam-medis', ['pet_id' => $request->pet_id])
+            return redirect()->route('perawat.rekam-medis')
                 ->with('success', 'Rekam medis berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
