@@ -37,8 +37,6 @@
         font-size: 13px;
         cursor: pointer;
     }
-    .edit { background: #e0f2fe; color: #0284c7; }
-    .delete { background: #fee2e2; color: #dc2626; }
     .btn-add-ras {
         margin-top: 10px;
         padding: 8px 14px;
@@ -115,6 +113,7 @@
                                         <div>
                                             <a href="{{ route('admin.ras-hewan.edit', $ras->idras_hewan) }}"
                                                class="btn-action edit">Edit</a>
+                                            <i class="bi bi-pencil-square"></i>
 
                                             <form action="{{ route('admin.ras-hewan.destroy', $ras->idras_hewan) }}"
                                                   method="POST"
@@ -123,6 +122,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn-action delete">Hapus</button>
+                                                <i class="bi bi-trash"></i>
                                             </form>
                                         </div>
                                     </div>
