@@ -27,7 +27,9 @@ class Admin extends Model
 
     public function getTotalRecentRekamMedis()
     {
-        return DB::table('rekam_medis')->where('created_at', '>=', now()->subDays(7))->count();
+        return DB::table('rekam_medis')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->count();
     }
 
     public function getPetSpeciesData()
@@ -38,17 +40,22 @@ class Admin extends Model
             ->select('j.nama_jenis_hewan', DB::raw('COUNT(p.idpet) as total_hewan'))
             ->groupBy('j.nama_jenis_hewan')
             ->orderBy('total_hewan', 'desc')
-            ->get();
+            ->get()
+            ->toArray(); // ← FIX PENTING
     }
 
     public function getRekamMedisMonthly()
     {
         return DB::table('rekam_medis')
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"), DB::raw('COUNT(idrekam_medis) as total'))
+            ->select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
+                DB::raw('COUNT(idrekam_medis) as total')
+            )
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('bulan')
             ->orderBy('bulan', 'asc')
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     public function getRecentRekamMedisActivities($limit = 10)
@@ -59,6 +66,7 @@ class Admin extends Model
             ->select('rm.created_at', 'u.nama as nama_dokter', 'p.nama', 'rm.diagnosa as detail')
             ->orderBy('rm.created_at', 'desc')
             ->limit($limit)
-            ->get();
+            ->get()
+            ->toArray(); // optional tapi bagus
     }
 }

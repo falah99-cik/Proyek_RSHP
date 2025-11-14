@@ -2,7 +2,14 @@
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Route;
 
-    $nama_admin = Auth::user()->name ?? 'Administrator';
+    $user = Auth::user();
+
+    // Nama admin dari database
+    $nama_admin = $user->nama ?? 'Administrator';
+
+    // Ambil role utama dari relasi role_user
+    $role = $user->roles->first()->nama_role ?? 'Administrator';
+
     $currentRoute = Route::currentRouteName();
 @endphp
 
@@ -24,13 +31,19 @@
     <div class="user-profile">
         <div class="avatar-container">
             <div class="avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
+                <span>{{ strtoupper(substr($nama_admin, 0, 1)) }}</span>
             </div>
             <div class="user-info">
                 <p class="user-name">{{ $nama_admin }}</p>
-                <p class="user-role">Administrator</p>
+
+                {{-- Jika role Administrator, tampilkan premium badge --}}
+                <p class="user-role">
+                    @if($role === 'Administrator')
+                        <span class="role-badge admin">Administrator</span>
+                    @else
+                        <span class="role-badge">{{ $role }}</span>
+                    @endif
+                </p>
             </div>
         </div>
     </div>

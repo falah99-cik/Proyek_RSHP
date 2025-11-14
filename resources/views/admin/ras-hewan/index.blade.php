@@ -2,121 +2,153 @@
 
 @section('title', 'Manajemen Ras Hewan - RSHP UNAIR')
 
+@push('css')
+<link rel="stylesheet" href="{{ asset('assets/css/admin/user_management.css') }}">
+<style>
+    .premium-table {
+        margin-top: 20px;
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        padding: 20px;
+    }
+    .ras-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+    .ras-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+    .ras-item:last-child {
+        border-bottom: none;
+    }
+    .btn-action {
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .edit { background: #e0f2fe; color: #0284c7; }
+    .delete { background: #fee2e2; color: #dc2626; }
+    .btn-add-ras {
+        margin-top: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
+        background: #4f46e5;
+        color: white;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Data Ras Hewan</h1>
-                <p class="page-subtitle">Kelola data ras hewan</p>
-            </div>
-            <a href="{{ route('admin.ras-hewan.create') }}" class="btn btn-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Tambah Ras Hewan
-            </a>
+<div class="container-fluid">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Data Ras Hewan</h1>
+            <p class="page-subtitle">Kelola ras hewan berdasarkan jenisnya</p>
         </div>
 
-        <!-- Session Messages -->
-        @if(session('success'))
-            <div class="alert alert-success">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                {{ session('success') }}
-            </div>
-        @endif
+        <a href="{{ route('admin.ras-hewan.create') }}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Tambah Ras
+        </a>
+    </div>
 
-        @if(session('error'))
-            <div class="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                {{ session('error') }}
-            </div>
-        @endif
+    <!-- ALERT -->
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-error">{{ session('error') }}</div>
+    @endif
 
-        <!-- Data Table -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Nama Ras</th>
-                                <th class="action-buttons">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($rasHewan as $ras)
-                                <tr>
-                                    <td>
-                                        <div class="flex items-center">
-                                            <div class="avatar avatar-sm mr-3">
-                                                <span class="avatar-text">{{ substr($ras->nama_ras, 0, 1) }}</span>
-                                            </div>
-                                            <span class="font-medium">{{ $ras->nama_ras }}</span>
+    <!-- TABEL PREMIUM -->
+    <div class="premium-table">
+        <div class="table-responsive">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%">Jenis Hewan</th>
+                        <th style="width: 55%">Ras Hewan</th>
+                        <th style="width: 20%; text-align:center;">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                @forelse($jenisHewan as $jenis)
+                    <tr>
+                        <td>
+                            <div class="user-flex">
+                                <span class="font-medium">{{ $jenis->nama_jenis_hewan }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            @php
+                                $rasList = $rasHewan->where('idjenis_hewan', $jenis->idjenis_hewan);
+                            @endphp
+
+                            @if($rasList->count() > 0)
+                                @foreach($rasList as $ras)
+                                    <div class="ras-item">
+                                        <span>{{ $ras->nama_ras }}</span>
+
+                                        <div>
+                                            <a href="{{ route('admin.ras-hewan.edit', $ras->idras_hewan) }}"
+                                               class="btn-action edit">Edit</a>
+
+                                            <form action="{{ route('admin.ras-hewan.destroy', $ras->idras_hewan) }}"
+                                                  method="POST"
+                                                  style="display:inline-block"
+                                                  onsubmit="return confirm('Yakin hapus ras ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn-action delete">Hapus</button>
+                                            </form>
                                         </div>
-                                    </td>
-                                    <td class="action-buttons">
-                                        <a href="{{ route('admin.ras-hewan.edit', $ras->idras_hewan) }}" class="btn btn-edit" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                            </svg>
-                                        </a>
-                                        <form action="{{ route('admin.ras-hewan.destroy', $ras->idras_hewan) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ras {{ $ras->nama_ras }}?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-delete" title="Hapus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="2" class="text-center">
-                                        <div class="empty-state">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon">
-                                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                                                <path d="M2 17l10 5 10-5"></path>
-                                                <path d="M2 12l10 5 10-5"></path>
-                                            </svg>
-                                            <p class="empty-state-text">Belum ada data ras hewan</p>
-                                            <p class="empty-state-subtext">Silakan tambahkan data ras hewan pertama Anda</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <p class="text-gray-400">Belum ada ras.</p>
+                            @endif
+                        </td>
+
+                        <td style="text-align:center;">
+                            <a href="{{ route('admin.ras-hewan.create') }}" class="btn-add-ras">
+                                Tambah Ras Baru
+                            </a>
+                        </td>
+                    </tr>
+
+                @empty
+                    <tr>
+                        <td colspan="3" class="text-center py-4">Tidak ada data.</td>
+                    </tr>
+                @endforelse
+
+                </tbody>
+            </table>
         </div>
     </div>
-@endsection
 
-@push('scripts')
-<script>
-    // Auto close alerts after 5 seconds
-    setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function(alert) {
-            alert.style.opacity = '0';
-            setTimeout(function() {
-                alert.remove();
-            }, 300);
-        });
-    }, 5000);
-</script>
-@endpush
+</div>
+@endsection

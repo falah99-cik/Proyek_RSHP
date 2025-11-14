@@ -13,7 +13,13 @@ class PemilikController extends Controller
 {
     public function index()
     {
-        $pemiliks = Pemilik::with('user')->get();
+        $pemiliks = Pemilik::select(
+            'pemilik.*',
+            'user.nama',
+            'user.email'
+        )
+            ->join('user', 'user.iduser', '=', 'pemilik.iduser')
+            ->get();
         return view('admin.pemilik.index', compact('pemiliks'));
     }
 

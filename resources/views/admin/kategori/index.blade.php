@@ -2,26 +2,36 @@
 
 @section('title', 'Manajemen Kategori - RSHP UNAIR')
 
+@push('css')
+<link rel="stylesheet" href="{{ asset('assets/css/admin/user_management.css') }}">
+@endpush
+
 @section('content')
+<div>
+
+    {{-- PAGE HEADER --}}
     <div class="page-header">
         <div>
             <h1 class="page-title">Data Kategori</h1>
-            <p class="page-subtitle">Kelola informasi kategori hewan di klinik</p>
         </div>
-        <button onclick="openAddModal()" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
+
+        <button type="button" class="btn btn-primary" onclick="openAddModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Tambah Kategori Baru
         </button>
     </div>
 
+    {{-- ALERTS --}}
     @if(session('success'))
         <div class="alert alert-success">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                 fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
             </svg>
             {{ session('success') }}
         </div>
@@ -29,196 +39,150 @@
 
     @if(session('error'))
         <div class="alert alert-error">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                 fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
             {{ session('error') }}
         </div>
     @endif
 
-    <div class="card">
+
+    {{-- TABEL PREMIUM --}}
+    <div class="premium-table">
         <div class="table-responsive">
-            <table class="table">
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>Nama Kategori</th>
-                        <th class="action-buttons">Aksi</th>
+                        <th style="text-align:center;">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @forelse($kategoris as $kategori)
                         <tr>
                             <td>
-                                <div class="avatar">
-                                    <div class="avatar-sm">
-                                        <div class="avatar-text">{{ substr($kategori->nama_kategori, 0, 2) }}</div>
+                                <div class="user-flex">
+                                    <div class="user-avatar">
+                                        {{ strtoupper(substr($kategori->nama_kategori, 0, 1)) }}
                                     </div>
                                     <span>{{ $kategori->nama_kategori }}</span>
                                 </div>
                             </td>
-                            <td class="action-buttons">
+
+                            <td>
                                 <div class="action-buttons">
-                                    <button onclick="openEditModal({{ $kategori->idkategori }})" class="btn btn-edit" title="Edit">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
+
+                                    {{-- EDIT --}}
+                                    <button class="btn-action edit"
+                                            onclick="openEditModal({{ $kategori->idkategori }}, '{{ $kategori->nama_kategori }}')"
+                                            title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <form action="{{ route('admin.kategori.destroy', $kategori->idkategori) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori {{ $kategori->nama_kategori }}?');">
+
+                                    {{-- DELETE --}}
+                                    <form action="{{ route('admin.kategori.destroy', $kategori->idkategori) }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Hapus kategori {{ $kategori->nama_kategori }}?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-delete" title="Hapus">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                <line x1="14" y1="11" x2="14" y2="17"></line>
-                                            </svg>
+                                        <button class="btn-action delete" title="Hapus">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" class="empty-state">
-                                <div class="empty-state-icon">📂</div>
-                                <div class="empty-state-text">Belum ada data kategori</div>
+                            <td colspan="2" class="text-center py-4 text-gray-500">
+                                Tidak ada data kategori.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>
 
-<!-- Edit Modals -->
-@foreach($kategoris as $kategori)
-<div id="editKategoriModal{{ $kategori->idkategori }}" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 class="modal-title">Edit Kategori</h3>
-            <button onclick="closeEditModal({{ $kategori->idkategori }})" class="modal-close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <form action="{{ route('admin.kategori.update', $kategori->idkategori) }}" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="nama_kategori{{ $kategori->idkategori }}">Nama Kategori</label>
-                    <input type="text" class="form-control" id="nama_kategori{{ $kategori->idkategori }}" 
-                           name="nama_kategori" value="{{ old('nama_kategori', $kategori->nama_kategori) }}" required>
-                    @error('nama_kategori')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeEditModal({{ $kategori->idkategori }})" class="btn btn-secondary">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-            </div>
-        </form>
-    </div>
 </div>
-@endforeach
 
-<!-- Add Modal -->
-<div id="kategoriModal" class="modal-backdrop">
+
+{{-- MODAL ADD --}}
+<div id="kategoriModal" class="modal-backdrop" style="display:none;">
     <div class="modal">
+
         <div class="modal-header">
             <h3 id="modalTitle" class="modal-title">Tambah Kategori</h3>
             <button onclick="closeModal()" class="modal-close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                     fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
             </button>
         </div>
 
         <form id="kategoriForm" method="POST">
             @csrf
-            <input type="hidden" name="_method" id="formMethod" value="POST">
-            
+            <input type="hidden" id="formMethod" name="_method" value="POST">
+
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="nama_kategori">Nama Kategori</label>
-                    <input type="text" class="form-control" id="nama_kategori" name="nama_kategori" 
-                           value="{{ old('nama_kategori') }}" required>
-                    @error('nama_kategori')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <label>Nama Kategori</label>
+                    <input type="text" id="nama_kategori" name="nama_kategori" class="form-control" required>
                 </div>
             </div>
 
             <div class="modal-footer">
                 <button type="button" onclick="closeModal()" class="btn btn-secondary">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button class="btn btn-primary">Simpan</button>
             </div>
+
         </form>
+
     </div>
 </div>
+
+@endsection
+
 
 @push('scripts')
 <script>
     function openAddModal() {
-        document.getElementById('modalTitle').textContent = 'Tambah Kategori';
-        document.getElementById('kategoriForm').reset();
-        document.getElementById('formMethod').value = 'POST';
-        document.getElementById('kategoriForm').action = '{{ route("admin.kategori.store") }}';
-        document.getElementById('kategoriModal').classList.add('show');
+        document.getElementById("modalTitle").textContent = "Tambah Kategori";
+        document.getElementById("kategoriForm").reset();
+        document.getElementById("formMethod").value = "POST";
+        document.getElementById("kategoriForm").action = "{{ route('admin.kategori.store') }}";
+        document.getElementById("kategoriModal").style.display = "block";
+    }
+
+    function openEditModal(id, nama) {
+        document.getElementById("modalTitle").textContent = "Edit Kategori";
+        document.getElementById("formMethod").value = "PUT";
+        document.getElementById("kategoriForm").action = "/admin/kategori/" + id;
+
+        document.getElementById("nama_kategori").value = nama;
+
+        document.getElementById("kategoriModal").style.display = "block";
     }
 
     function closeModal() {
-        document.getElementById('kategoriModal').classList.remove('show');
-        document.getElementById('kategoriForm').reset();
+        document.getElementById("kategoriModal").style.display = "none";
     }
 
-    function openEditModal(kategoriId) {
-        document.getElementById(`editKategoriModal${kategoriId}`).classList.add('show');
-    }
-
-    function closeEditModal(kategoriId) {
-        document.getElementById(`editKategoriModal${kategoriId}`).classList.remove('show');
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('kategoriModal').addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal-backdrop')) {
-            closeModal();
-        }
-    });
-
-    @foreach($kategoris as $kategori)
-    document.getElementById('editKategoriModal{{ $kategori->idkategori }}').addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal-backdrop')) {
-            closeEditModal({{ $kategori->idkategori }});
-        }
-    });
-    @endforeach
-
-    // Auto close alerts after 5 seconds
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function(alert) {
-            setTimeout(function() {
-                alert.style.opacity = '0';
-                setTimeout(function() {
-                    alert.remove();
-                }, 300);
-            }, 5000);
+    // Auto Close Alerts
+    setTimeout(() => {
+        document.querySelectorAll(".alert").forEach(a => {
+            a.style.opacity = "0";
+            setTimeout(() => a.remove(), 300);
         });
-    });
+    }, 5000);
 </script>
 @endpush
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/admin/manajemen_pet.css') }}">
-@endpush
-@endsection

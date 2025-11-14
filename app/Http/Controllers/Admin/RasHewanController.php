@@ -15,8 +15,19 @@ class RasHewanController extends Controller
      */
     public function index()
     {
-        $rasHewan = RasHewan::with('jenisHewan')->orderBy('idras_hewan', 'asc')->get();
-        return view('admin.ras-hewan.index', compact('rasHewan'));
+        // Ambil semua ras
+        $rasHewan = DB::table('ras_hewan')->orderBy('idras_hewan')->get();
+
+        // Ambil jenis hewan yang dipakai oleh ras-ras tersebut
+        $jenisHewan = DB::table('jenis_hewan')
+            ->whereIn('idjenis_hewan', $rasHewan->pluck('idjenis_hewan'))
+            ->orderBy('nama_jenis_hewan', 'asc')
+            ->get();
+
+        return view('admin.ras-hewan.index', [
+            'rasHewan' => $rasHewan,
+            'jenisHewan' => $jenisHewan,
+        ]);
     }
 
     /**
