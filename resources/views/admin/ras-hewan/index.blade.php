@@ -113,7 +113,6 @@
                                         <div>
                                             <a href="{{ route('admin.ras-hewan.edit', $ras->idras_hewan) }}"
                                                class="btn-action edit">Edit</a>
-                                            <i class="bi bi-pencil-square"></i>
 
                                             <form action="{{ route('admin.ras-hewan.destroy', $ras->idras_hewan) }}"
                                                   method="POST"
@@ -122,7 +121,6 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn-action delete">Hapus</button>
-                                                <i class="bi bi-trash"></i>
                                             </form>
                                         </div>
                                     </div>
