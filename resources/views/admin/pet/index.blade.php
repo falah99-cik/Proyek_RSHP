@@ -66,13 +66,13 @@
                                             <div class="avatar avatar-sm mr-3">
                                                 <span class="avatar-text">{{ substr($pet->nama_hewan, 0, 1) }}</span>
                                             </div>
-                                            <span class="font-medium">{{ $pet->nama_hewan }}</span>
+                                            <span class="font-medium">{{ $pet->nama ?? '-' }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ $pet->jenisHewan->nama_jenis_hewan ?? '-' }}</td>
-                                    <td>{{ $pet->rasHewan->nama_ras ?? '-' }}</td>
-                                    <td>{{ $pet->umur ?? '-' }} {{ $pet->satuan_umur ?? '' }}</td>
-                                    <td>{{ $pet->pemilikHewan->user->nama ?? '-' }}</td>
+                                    <td>{{ $pet->ras->jenisHewan->nama_jenis ?? '-' }}</td>
+                                    <td>{{ $pet->ras->nama_ras ?? '-' }}</td>
+                                    <td>{{ $pet->tanggal_lahir ? \Carbon\Carbon::parse($pet->tanggal_lahir)->age . ' tahun' : '-' }}</td>
+                                    <td>{{ $pet->pemilik->user->nama ?? '-' }}</td>
                                     <td class="action-buttons">
                                         <button type="button" class="btn btn-edit" onclick="openEditModal({{ $pet }})" title="Edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,18 +80,14 @@
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                             </svg>
                                         </button>
-                                        <form action="{{ route('admin.pet.destroy', $pet->idhewan) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus hewan {{ $pet->nama_hewan }}?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-delete" title="Hapus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        <form action="{{ route('admin.pet.destroy', $pet->idpet) }}" 
+      method="POST" 
+      onsubmit="return confirm('Yakin hapus?')">
+    @csrf
+    @method('DELETE')
+    <button class="btn btn-delete">Hapus</button>
+</form>
+
                                     </td>
                                 </tr>
                             @empty

@@ -14,12 +14,20 @@ class PetController extends Controller
 {
     public function index()
     {
-        $pets = Pet::getAllPetsWithDetails();
-        $owners = Pemilik::with('user')->get();
-        $jenisHewan = JenisHewan::all();
+        $pets = Pet::with([
+            'ras.jenisHewan',
+            'pemilik.user'
+        ])
+            ->orderBy('idpet', 'DESC')
+            ->get();
 
-        return view('admin.pet.index', compact('pets', 'owners', 'jenisHewan'));
+        return view('admin.pet.index', [
+            'pets' => $pets,
+            'owners' => Pemilik::with('user')->get(),
+            'jenisHewan' => JenisHewan::all(),
+        ]);
     }
+
 
     public function store(Request $request)
     {

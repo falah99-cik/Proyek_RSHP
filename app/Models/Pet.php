@@ -21,20 +21,16 @@ class Pet extends Model
         return $this->belongsTo(Pemilik::class, 'idpemilik', 'idpemilik');
     }
 
-    public function rasHewan()
+    public function ras()
     {
         return $this->belongsTo(RasHewan::class, 'idras_hewan', 'idras_hewan');
     }
 
-    public function jenisHewan()
+    public static function getAllPetsWithDetails()
     {
-        return $this->hasOneThrough(
-            JenisHewan::class,
-            RasHewan::class,
-            'idras_hewan',
-            'idjenis_hewan',
-            'idras_hewan',
-            'idjenis_hewan'
-        );
+        return self::select('pet.*')
+            ->with(['jenisHewan', 'pemilik'])
+            ->orderBy('idpet', 'DESC')
+            ->get();
     }
 }
