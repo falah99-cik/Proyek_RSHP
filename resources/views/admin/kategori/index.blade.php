@@ -66,9 +66,6 @@
                         <tr>
                             <td>
                                 <div class="user-flex">
-                                    <div class="user-avatar">
-                                        {{ strtoupper(substr($kategori->nama_kategori, 0, 1)) }}
-                                    </div>
                                     <span>{{ $kategori->nama_kategori }}</span>
                                 </div>
                             </td>
