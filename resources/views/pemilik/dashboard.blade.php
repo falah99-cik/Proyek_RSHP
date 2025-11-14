@@ -83,8 +83,8 @@
                                     @forelse($pets as $pet)
                                     <tr>
                                         <td>{{ $pet->nama }}</td>
-                                        <td>{{ $pet->jenisHewan->nama_jenis_hewan }}</td>
-                                        <td>{{ $pet->rasHewan->nama_ras }}</td>
+                                        <td>{{ $pet->jenisHewan->nama_jenis_hewan ?? '-' }}</td>
+                                        <td>{{ $pet->rasHewan->nama_ras ?? '-' }}</td>
                                     </tr>
                                     @empty
                                     <tr>
